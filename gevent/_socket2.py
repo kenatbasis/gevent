@@ -142,7 +142,8 @@ class socket(object):
         self.hub.cancel_wait(self._write_event, cancel_wait_ex)
         s = self._sock
         self._sock = _closedsocket()
-        s._drop()
+        if PYPY:
+            s._drop()
 
     @property
     def closed(self):
