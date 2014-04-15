@@ -35,6 +35,7 @@ class BaseLocalTest:
         del t
 
         gc.collect()
+        gc.collect()  # needed when run through gevent; why?
         self.assertEqual(len(weaklist), n)
 
         # XXX _threading_local keeps the local of the last stopped thread alive.
