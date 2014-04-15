@@ -28,6 +28,8 @@ __all__ = ['getcurrent',
 
 
 PY3 = sys.version_info[0] >= 3
+PYPY = hasattr(sys, 'pypy_version_info')
+LOOP = 'gevent.core.loop'
 
 
 if PY3:
@@ -259,7 +261,7 @@ class Hub(greenlet):
 
     SYSTEM_ERROR = (KeyboardInterrupt, SystemExit, SystemError)
     NOT_ERROR = (GreenletExit, SystemExit)
-    loop_class = config('gevent.core.loop', 'GEVENT_LOOP')
+    loop_class = config(LOOP, 'GEVENT_LOOP')
     resolver_class = ['gevent.resolver_thread.Resolver',
                       'gevent.resolver_ares.Resolver',
                       'gevent.socket.BlockingResolver']

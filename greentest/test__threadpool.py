@@ -328,7 +328,7 @@ class TestRef(TestCase):
             refs.append(weakref.ref(func))
             del func, result
             for index, r in enumerate(refs):
-                assert r() is None, (index, r(), sys.getrefcount(r()), refs)
+                assert r() is None, (index, r(), greentest.getrefcount(r()), refs)
             assert len(refs) == 4, refs
 
 

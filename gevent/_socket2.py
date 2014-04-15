@@ -2,6 +2,7 @@
 
 import time
 from gevent import _socketcommon
+from gevent.hub import PYPY
 
 for key in _socketcommon.__dict__:
     if key.startswith('__'):
@@ -139,7 +140,9 @@ class socket(object):
         # This function should not reference any globals. See Python issue #808164.
         self.hub.cancel_wait(self._read_event, cancel_wait_ex)
         self.hub.cancel_wait(self._write_event, cancel_wait_ex)
+        s = self._sock
         self._sock = _closedsocket()
+        s._drop()
 
     @property
     def closed(self):
@@ -339,6 +342,23 @@ class socket(object):
     for _m in set(__socket__._socketmethods) - set(locals()):
         exec(_s % (_m, _m, _m, _m))
     del _m, _s
+
+    if PYPY:
+
+        def _reuse(self):
+            self._sock._reuse()
+
+        def _drop(self):
+            self._sock._drop()
+
+    else:
+
+        def _reuse(self):
+            pass
+
+        def _drop(self):
+            pass
+
 
 SocketType = socket
 

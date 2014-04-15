@@ -33,6 +33,7 @@ from functools import wraps
 import contextlib
 import gc
 
+PYPY = hasattr(sys, 'pypy_version_info')
 VERBOSE = sys.argv.count('-v') > 1
 
 if '--debug-greentest' in sys.argv:
@@ -390,7 +391,7 @@ def walk_modules(basedir=None, modpath=None, include_so=False):
             x = fn[:-3]
             if x.endswith('_d'):
                 x = x[:-2]
-            if x not in ['__init__', 'core', 'ares', '_util', '_semaphore']:
+            if x not in ['__init__', 'core', 'ares', '_util', '_semaphore', 'corecffi']:
                 yield path, modpath + x
         elif include_so and fn.endswith('.so'):
             if fn.endswith('_d.so'):
@@ -433,3 +434,14 @@ def get_number_open_files():
     if os.path.exists('/proc/'):
         fd_directory = '/proc/%d/fd' % os.getpid()
         return len(os.listdir(fd_directory))
+
+
+if PYPY:
+
+    def getrefcount(*args):
+        pass
+
+else:
+
+    def getrefcount(*args):
+        return sys.getrefcount(*args)

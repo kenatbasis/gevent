@@ -26,6 +26,8 @@ for path, module in walk_modules():
         continue
     if sys.version_info[0] == 2 and path.endswith('3.py'):
         continue
+    if 'corecffi' in path:
+        continue
     make_exec_test(path, module)
 
 
