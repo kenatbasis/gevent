@@ -2,7 +2,10 @@ from gevent.hub import PYPY
 
 if PYPY:
     from gevent.corecffi import *
-    from gevent.corecffi import __all__, _flags_to_int
+    from gevent import corecffi as _core
 else:
     from gevent.corecext import *
-    from gevent.corecext import __all__, _flags_to_int
+    from gevent import corecext as _core
+
+__all__ = _core.__all__
+_flags_to_int = _core._flags_to_int
