@@ -740,24 +740,6 @@ class watcher(object):
             self.loop.unref()
             self._flags |= 2
 
-    def _python_incref(self):
-        if not self._flags & 1:
-            try:
-                _refcount[self] += 1
-            except KeyError:
-                _refcount[self] = 1
-            # Py_INCREF(<PyObjectPtr>self)
-            self._flags |= 1
-
-    def _python_decref(self):
-        try:
-            if _refcount[self] <= 1:
-                del _refcount[self]
-            else:
-                _refcount[self] -= 1
-        except KeyError:
-            pass
-
     def _get_ref(self):
         return False if self._flags & 4 else True
 
@@ -791,7 +773,6 @@ class watcher(object):
         self.args = args
         self._libev_unref()
         self.libev_start_this_watcher(self.loop._ptr, self._watcher)
-        self._python_incref()
 
     def stop(self):
         if self._flags & 2:
@@ -800,10 +781,6 @@ class watcher(object):
         self.libev_stop_this_watcher(self.loop._ptr, self._watcher)
         self._callback = None
         self.args = None
-        if self._flags & 1:
-            self._python_decref()
-            # Py_DECREF(<PyObjectPtr>self)
-            self._flags &= ~1
 
     def _get_priority(self):
         return libev.ev_priority(self._watcher)
@@ -906,8 +883,6 @@ class timer(watcher):
             libev.ev_now_update(self.loop._ptr)
         libev.ev_timer_start(self.loop._ptr, self._watcher)
 
-        self._python_incref()  # PYTHON_INCREF
-
     @property
     def at(self):
         return self._watcher.at
@@ -920,7 +895,6 @@ class timer(watcher):
         if update:
             libev.ev_now_update(self.loop._ptr)
         libev.ev_timer_again(self.loop._ptr, self._watcher)
-        self._python_incref()
 
 
 class signal(watcher):
