@@ -111,13 +111,12 @@ class BasicSocketTests(unittest.TestCase):
         if test_support.verbose:
             sys.stdout.write("\n" + pprint.pformat(p) + "\n")
         self.assertEqual(p['subject'],
-                         ((('countryName', u'US'),),
-                          (('stateOrProvinceName', u'Delaware'),),
-                          (('localityName', u'Wilmington'),),
-                          (('organizationName', u'Python Software Foundation'),),
-                          (('organizationalUnitName', u'SSL'),),
-                          (('commonName', u'somemachine.python.org'),)),
+                         ((('countryName', 'XY'),),
+                          (('localityName', 'Castle Anthrax'),),
+                          (('organizationName', 'Python Software Foundation'),),
+                          (('commonName', 'localhost'),))
                         )
+        self.assertEqual(p['subjectAltName'], (('DNS', 'localhost'),))
         # Issue #13034: the subjectAltName in some certificates
         # (notably projects.developer.nokia.com:443) wasn't parsed
         p = ssl._ssl._test_decode_cert(NOKIACERT)
@@ -910,6 +909,8 @@ else:
                 c = socket.socket()
                 c.connect((HOST, port))
                 listener_gone.wait()
+                # XXX why is it necessary?
+                test_support.gc_collect()
                 try:
                     ssl_sock = ssl.wrap_socket(c)
                 except IOError:
@@ -1337,13 +1338,10 @@ else:
 
 def test_main(verbose=False):
     global CERTFILE, SVN_PYTHON_ORG_ROOT_CERT, NOKIACERT
-    CERTFILE = os.path.join(os.path.dirname(__file__) or os.curdir,
-                            "keycert.pem")
-    SVN_PYTHON_ORG_ROOT_CERT = os.path.join(
-        os.path.dirname(__file__) or os.curdir,
+    CERTFILE = test_support.findfile("keycert.pem")
+    SVN_PYTHON_ORG_ROOT_CERT = test_support.findfile(
         "https_svn_python_org_root.pem")
-    NOKIACERT = os.path.join(os.path.dirname(__file__) or os.curdir,
-                             "nokia.pem")
+    NOKIACERT = test_support.findfile("nokia.pem")
 
     if (not os.path.exists(CERTFILE) or
         not os.path.exists(SVN_PYTHON_ORG_ROOT_CERT) or
