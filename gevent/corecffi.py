@@ -76,7 +76,11 @@ ffi.cdef("""
 #define EVBREAK_ONE ...
 #define EVBREAK_ALL ...
 
-struct ev_loop;
+struct ev_loop {
+    int backend_fd;
+    ...;
+};
+
 struct ev_io {
     int fd;
     int events;
@@ -479,15 +483,18 @@ class loop(object):
         if self._callbacks:
             libev.ev_timer_start(self._ptr, self._timer0)
 
-    def _stop_signal_checker(self):
-        if libev.ev_is_active(self._signal_checker):
+    def _stop_aux_watchers(self):
+        if libev.ev_is_active(self._prepare):
             self.ref()
-            libev.ev_prepare_stop(self._ptr, self._signal_checker)
+            libev.ev_prepare_stop(self._ptr, self._prepare)
+        if libev.ev_is_active(self._check):
+            self.ref()
+            libev.ev_check_stop(self._ptr, self._check)
 
     def destroy(self):
         global _default_loop_destroyed
         if self._ptr:
-            self._stop_signal_checker()
+            self._stop_aux_watchers()
             if globals()["__SYSERR_CALLBACK"] == self._handle_syserr:
                 set_syserr_cb(None)
             if libev.ev_is_default_loop(self._ptr):
@@ -513,7 +520,15 @@ class loop(object):
         return libev.EV_MINPRI
 
     def _handle_syserr(self, message, errno):
-        self.handle_error(None, SystemError, SystemError(message + ': ' + os.strerror(errno)), None)
+        try:
+            errno = os.strerror(errno)
+        except:
+            traceback.print_exc()
+        try:
+            message = '%s: %s' % (message, errno)
+        except:
+            traceback.print_exc()
+        self.handle_error(None, SystemError, SystemError(message), None)
 
     def handle_error(self, context, type, value, tb):
         handle_error = None
@@ -649,11 +664,11 @@ class loop(object):
 # #endif
         return msg
 
-# #ifdef LIBEV_EMBED
-#    def fileno(self):
-#        fd = self._ptr.backend_fd
-#        if fd >= 0:
-#            return fd
+    def fileno(self):
+        fd = self._ptr.backend_fd
+        if fd >= 0:
+            return fd
+
 #
 #    LOOP_PROPERTY(activecnt)
 #
@@ -1058,12 +1073,11 @@ class callback(object):
 
 def _syserr_cb(msg):
     try:
+        msg = ffi.string(msg)
         __SYSERR_CALLBACK(msg, ffi.errno)
     except:
         set_syserr_cb(None)
-        print_exc = getattr(traceback, 'print_exc', None)
-        if print_exc is not None:
-            print_exc()
+        raise  # let cffi print the traceback
 
 _syserr_cb._cb = ffi.callback("void(*)(char *msg)", _syserr_cb)
 
