@@ -1,10 +1,15 @@
 from time import time, sleep
+import sys
 import random
 import weakref
 import greentest
 from gevent.threadpool import ThreadPool
 import gevent
 import six
+import gc
+
+
+PYPY = hasattr(sys, 'pypy_version_info')
 
 
 class TestCase(greentest.TestCase):
@@ -326,6 +331,9 @@ class TestRef(TestCase):
 
             refs.append(weakref.ref(func))
             del func, result
+            if PYPY:
+                gc.collect()
+                gc.collect()
             for index, r in enumerate(refs):
                 assert r() is None, (index, r(), greentest.getrefcount(r()), refs)
             assert len(refs) == 4, refs
