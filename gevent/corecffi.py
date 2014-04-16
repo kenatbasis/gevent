@@ -486,7 +486,6 @@ class loop(object):
                     continue
 
                 cb.callback = None
-                cb.args = None
 
                 try:
                     self.keyboard_interrupt_allowed = True
@@ -495,10 +494,9 @@ class loop(object):
                     self.handle_error(cb, *sys.exc_info())
                 finally:
                     self.keyboard_interrupt_allowed = False
-
-                # cb.callback(*(cb.args if cb.args is not None else ()))
-                # gevent_call(self, cb)
-                count -= 1
+                    # Note, this must be reset here, because cb.args is used as a flag in callback class,
+                    cb.args = None
+                    count -= 1
         if self._callbacks:
             libev.ev_timer_start(self._ptr, self._timer0)
 
