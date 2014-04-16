@@ -384,7 +384,11 @@ if hasattr(_socket, 'socketpair'):
 
     def socketpair(*args):
         one, two = _socket.socketpair(*args)
-        return socket(_sock=one), socket(_sock=two)
+        result = socket(_sock=one), socket(_sock=two)
+        if PYPY:
+            one._drop()
+            two._drop()
+        return result
 else:
     __implements__.remove('socketpair')
 
