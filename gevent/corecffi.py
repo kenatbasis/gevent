@@ -78,6 +78,7 @@ ffi.cdef("""
 
 struct ev_loop {
     int backend_fd;
+    int activecnt;
     ...;
 };
 
@@ -672,21 +673,43 @@ class loop(object):
         return cb
 
     def _format(self):
+        if not self._ptr:
+            return 'destroyed'
         msg = self.backend
         if self.default:
             msg += ' default'
         msg += ' pending=%s' % self.pendingcnt
-# #ifdef LIBEV_EMBED
-#         msg += self._format_details()
-# #endif
+        msg += self._format_details()
+        return msg
+
+    def _format_details(self):
+        msg = ''
+        fileno = self.fileno()
+        try:
+            activecnt = self.activecnt
+        except AttributeError:
+            activecnt = None
+        if activecnt is not None:
+            msg += ' ref=' + repr(activecnt)
+        if fileno is not None:
+            msg += ' fileno=' + repr(fileno)
+        #if sigfd is not None and sigfd != -1:
+        #    msg += ' sigfd=' + repr(sigfd)
         return msg
 
     def fileno(self):
-        fd = self._ptr.backend_fd
-        if fd >= 0:
-            return fd
+        if self._ptr:
+            fd = self._ptr.backend_fd
+            if fd >= 0:
+                return fd
 
-#
+    @property
+    def activecnt(self):
+        if not self._ptr:
+            raise ValueError('operation on destroyed loop')
+        return self._ptr.activecnt
+
+
 #    LOOP_PROPERTY(activecnt)
 #
 #    LOOP_PROPERTY(sig_pending)
@@ -732,6 +755,22 @@ class watcher(object):
         if priority is not None:
             libev.ev_set_priority(self._watcher, priority)
         _refcount[self] = True
+
+    def __repr__(self):
+        format = self._format()
+        result = "<%s at 0x%x%s" % (self.__class__.__name__, id(self), format)
+        if self.pending:
+            result += " pending"
+        if self.callback is not None:
+            result += " callback=%r" % (self.callback, )
+        if self.args is not None:
+            result += " args=%r" % (self.args, )
+        if self.callback is None and self.args is None:
+            result += " stopped"
+        return result + ">"
+
+    def _format(self):
+        return ''
 
     def _run_callback(self, loop, c_watcher, revents):
         try:
@@ -1038,6 +1077,7 @@ class child(watcher):
 
 
 class callback(object):
+
     def __init__(self, callback, args):
         self.callback = callback
         self.args = args
