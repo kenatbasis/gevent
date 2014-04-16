@@ -148,6 +148,7 @@ class TestSocket(Test):
             self.assert_closed(client_socket)
         finally:
             t.join()
+            listener.close()
 
     def test_server_makefile1(self):
         listener = socket.socket()
@@ -175,6 +176,7 @@ class TestSocket(Test):
             self.assert_closed(client_socket, fileno)
         finally:
             t.join()
+            listener.close()
 
     def test_server_makefile2(self):
         listener = socket.socket()
@@ -202,6 +204,7 @@ class TestSocket(Test):
             self.assert_closed(client_socket, fileno)
         finally:
             t.join()
+            listener.close()
 
 
 class TestSSL(Test):
@@ -274,6 +277,7 @@ class TestSSL(Test):
             self.assert_closed(client_socket, fileno)
         finally:
             t.join()
+            listener.close()
 
     def test_server_makefile1(self):
         listener = socket.socket()
@@ -337,6 +341,7 @@ class TestSSL(Test):
             self.assert_closed(client_socket, fileno)
         finally:
             t.join()
+            listener.close()
 
     def test_serverssl_makefile1(self):
         listener = socket.socket()
@@ -367,6 +372,7 @@ class TestSSL(Test):
             self.assert_closed(client_socket, fileno)
         finally:
             t.join()
+            listener.close()
 
     def test_serverssl_makefile2(self):
         listener = socket.socket()
@@ -401,6 +407,7 @@ class TestSSL(Test):
             self.assert_closed(client_socket, fileno)
         finally:
             t.join()
+            listener.close()
 
 
 if __name__ == '__main__':
