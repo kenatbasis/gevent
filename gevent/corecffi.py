@@ -234,6 +234,25 @@ libev.vfd_open = libev.vfd_get = lambda fd: fd
 libev.vfd_free = lambda fd: None
 
 
+UNDEF = libev.EV_UNDEF
+NONE = libev.EV_NONE
+READ = libev.EV_READ
+WRITE = libev.EV_WRITE
+TIMER = libev.EV_TIMER
+PERIODIC = libev.EV_PERIODIC
+SIGNAL = libev.EV_SIGNAL
+CHILD = libev.EV_CHILD
+STAT = libev.EV_STAT
+IDLE = libev.EV_IDLE
+PREPARE = libev.EV_PREPARE
+CHECK = libev.EV_CHECK
+EMBED = libev.EV_EMBED
+FORK = libev.EV_FORK
+CLEANUP = libev.EV_CLEANUP
+ASYNC = libev.EV_ASYNC
+CUSTOM = libev.EV_CUSTOM
+ERROR = libev.EV_ERROR
+
 READWRITE = libev.EV_READ | libev.EV_WRITE
 
 MINPRI = libev.EV_MINPRI
