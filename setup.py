@@ -24,8 +24,6 @@ from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatfo
 ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError)
 
 
-
-
 __version__ = re.search("__version__\s*=\s*'(.*)'", open('gevent/__init__.py').read(), re.M).group(1)
 assert __version__
 
