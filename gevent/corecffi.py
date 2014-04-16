@@ -733,6 +733,7 @@ class watcher(object):
             self._flags = 4
         if priority is not None:
             libev.ev_set_priority(self._watcher, priority)
+        _refcount[self] = True
 
     def _run_callback(self, loop, c_watcher, revents):
         try:
