@@ -838,6 +838,7 @@ class watcher(object):
         self.libev_stop_this_watcher(self.loop._ptr, self._watcher)
         self._callback = None
         self.args = None
+        _refcount.pop(self, None)
 
     def _get_priority(self):
         return libev.ev_priority(self._watcher)
