@@ -3,7 +3,7 @@ import sys
 import gevent
 try:
     from gevent.resolver_ares import Resolver
-except ImportError, ex:
+except ImportError as ex:
     print(ex)
     sys.exit(0)
 from gevent import socket
