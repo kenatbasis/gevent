@@ -54,8 +54,8 @@ CARES_EMBED = get_config_value('CARES_EMBED', 'EMBED', 'c-ares')
 
 define_macros = []
 libraries = []
-libev_configure_command = ["/bin/sh", abspath('libev/configure'), '> configure-output.txt']
-ares_configure_command = ["/bin/sh", abspath('c-ares/configure'), 'CONFIG_COMMANDS= CONFIG_FILES= > configure-output.txt']
+libev_configure_command = ' '.join(["/bin/sh", abspath('libev/configure'), '> configure-output.txt'])
+ares_configure_command = ' '.join(["/bin/sh", abspath('c-ares/configure'), 'CONFIG_COMMANDS= CONFIG_FILES= > configure-output.txt'])
 
 
 if sys.platform == 'win32':
@@ -108,8 +108,6 @@ def make_universal_header(filename, *defines):
 
 
 def _system(cmd):
-    if not isinstance(cmd, basestring):
-        cmd = ' '.join(cmd)
     sys.stdout.write('Running %r in %s\n' % (cmd, os.getcwd()))
     return os.system(cmd)
 
@@ -203,8 +201,7 @@ def make(done=[]):
         if os.path.exists('Makefile'):
             if "PYTHON" not in os.environ:
                 os.environ["PYTHON"] = sys.executable
-            if os.system('make'):
-                sys.exit(1)
+            system('make')
         done.append(1)
 
 
