@@ -196,7 +196,7 @@ def _run(command, **kwargs):
     assert not err
     with lock:
         if out:
-            out = out.strip().decode()
+            out = out.strip().decode('utf-8', 'ignore')
             if out:
                 out = '  ' + out.replace('\n', '\n  ')
                 out = out.rstrip()
