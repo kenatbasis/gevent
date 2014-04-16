@@ -7,7 +7,8 @@ import threading
 import unittest
 
 
-certfile = 'greentest/2.7/keycert.pem'
+dirname = os.path.dirname(os.path.abspath(__file__))
+certfile = os.path.join(dirname, '2.7/keycert.pem')
 pid = os.getpid()
 tmpname = '/tmp/test__makefile_ref.lsof.%s' % pid
 lsof_command = 'lsof -p %s > %s' % (pid, tmpname)
@@ -294,9 +295,7 @@ class TestSSL(Test):
 
         try:
             client_socket, _addr = listener.accept()
-            client_socket = ssl.wrap_socket(client_socket, keyfile='greentest/2.7/keycert.pem',
-                                            certfile='greentest/2.7/keycert.pem',
-                                            server_side=True)
+            client_socket = ssl.wrap_socket(client_socket, keyfile=certfile, certfile=certfile, server_side=True)
             fileno = client_socket.fileno()
             self.assert_open(client_socket, fileno)
             f = client_socket.makefile()
@@ -325,9 +324,7 @@ class TestSSL(Test):
 
         try:
             client_socket, _addr = listener.accept()
-            client_socket = ssl.wrap_socket(client_socket, keyfile='greentest/2.7/keycert.pem',
-                                            certfile='greentest/2.7/keycert.pem',
-                                            server_side=True)
+            client_socket = ssl.wrap_socket(client_socket, keyfile=certfile, certfile=certfile, server_side=True)
             fileno = client_socket.fileno()
             self.assert_open(client_socket, fileno)
             f = client_socket.makefile()
