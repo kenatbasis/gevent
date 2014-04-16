@@ -9,15 +9,21 @@ import traceback
 from os.path import join, abspath, basename, dirname
 from glob import glob
 
-# need setuptools for include_package_data to work
-from setuptools import Extension, setup
+PYPY = hasattr(sys, 'pypy_version_info')
+
+try:
+    from setuptools import Extension, setup
+except ImportError:
+    if PYPY:
+        # need setuptools for include_package_data to work
+        raise
+    from distutils.core import Extension, setup
 from distutils.command.build_ext import build_ext
 from distutils.command.sdist import sdist as _sdist
 from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatformError
 ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError)
 
 
-PYPY = hasattr(sys, 'pypy_version_info')
 
 
 __version__ = re.search("__version__\s*=\s*'(.*)'", open('gevent/__init__.py').read(), re.M).group(1)
