@@ -109,7 +109,8 @@ class TestSocket(Test):
         self.assert_closed(s)
         self.assert_open(fileno)
         f.close()
-        self.assert_closed(s, fileno)
+        self.assert_closed(s)
+        self.assert_closed(fileno)
 
     def test_makefile2(self):
         s = socket.socket()

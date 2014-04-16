@@ -37,6 +37,15 @@ class _closedsocket(object):
         raise error(EBADF, 'Bad file descriptor')
     # All _delegate_methods must also be initialized here.
     send = recv = recv_into = sendto = recvfrom = recvfrom_into = _dummy
+
+    if PYPY:
+
+        def _drop(self):
+            pass
+
+        def _reuse(self):
+            pass
+
     __getattr__ = _dummy
 
 
@@ -58,6 +67,8 @@ class socket(object):
             else:
                 self._sock = _sock
                 self.timeout = _socket.getdefaulttimeout()
+            if PYPY:
+                self._sock._reuse()
         self._sock.setblocking(0)
         fileno = self._sock.fileno()
         self.hub = get_hub()
@@ -134,7 +145,10 @@ class socket(object):
                     raise
                 sys.exc_clear()
             self._wait(self._read_event)
-        return socket(_sock=client_socket), address
+        sockobj = socket(_sock=client_socket)
+        if PYPY:
+            client_socket._drop()
+        return sockobj, address
 
     def close(self, _closedsocket=_closedsocket, cancel_wait_ex=cancel_wait_ex):
         # This function should not reference any globals. See Python issue #808164.
@@ -200,7 +214,10 @@ class socket(object):
         #    socket (hence creating a new instance)
         # 2) The resulting fileobject must keep the timeout in order
         #    to be compatible with the stdlib's socket.makefile.
-        return _fileobject(type(self)(_sock=self), mode, bufsize)
+        fobj = _fileobject(type(self)(_sock=self._sock), mode, bufsize)
+        if PYPY:
+            self._sock._drop()
+        return fobj
 
     def recv(self, *args):
         sock = self._sock  # keeping the reference so that fd is not closed during waiting
