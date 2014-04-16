@@ -1,8 +1,5 @@
 import os
-if not os.environ.get('STDLIB'):
-    print 'gevent'
-    from gevent import monkey; monkey.patch_all()
-    import gevent
+from gevent import monkey; monkey.patch_all()
 import re
 import socket
 import ssl
