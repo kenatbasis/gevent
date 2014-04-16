@@ -395,7 +395,12 @@ else:
 if hasattr(_socket, 'fromfd'):
 
     def fromfd(*args):
-        return socket(_sock=_socket.fromfd(*args))
+        s = _socket.fromfd(*args)
+        result = socket(_sock=s)
+        if PYPY:
+            s._drop()
+        return result
+
 else:
     __implements__.remove('fromfd')
 
