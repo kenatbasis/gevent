@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
     def assert_raises_EBADF(self, func):
         try:
             result = func()
-        except socket.error, ex:
+        except socket.error as ex:
             if ex.errno == 9:
                 return
             raise
