@@ -218,7 +218,7 @@ void ev_sleep (ev_tstamp delay); /* sleep for a while */
 
 
 thisdir = os.path.dirname(os.path.realpath(__file__))
-include_dirs = [thisdir, os.path.join(thisdir, '..', 'libev')]
+include_dirs = [thisdir, os.path.join(thisdir, 'libev')]
 libev = C = ffi.verify("""   // passed to the real C compiler
 #define LIBEV_EMBED 1
 #include "libev.h"

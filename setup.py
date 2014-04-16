@@ -9,10 +9,8 @@ import traceback
 from os.path import join, abspath, basename, dirname
 from glob import glob
 
-try:
-    from setuptools import Extension, setup
-except ImportError:
-    from distutils.core import Extension, setup
+# need setuptools for include_package_data to work
+from setuptools import Extension, setup
 from distutils.command.build_ext import build_ext
 from distutils.command.sdist import sdist as _sdist
 from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatformError
@@ -106,9 +104,15 @@ def make_universal_header(filename, *defines):
 
 
 def _system(cmd):
-    cmd = ' '.join(cmd)
+    if not isinstance(cmd, basestring):
+        cmd = ' '.join(cmd)
     sys.stdout.write('Running %r in %s\n' % (cmd, os.getcwd()))
     return os.system(cmd)
+
+
+def system(cmd):
+    if _system(cmd):
+        sys.exit(1)
 
 
 def configure_libev(bext, ext):
@@ -282,14 +286,14 @@ def read(name, *args):
 
 if PYPY:
     sys.path.insert(0, '.')
-    os.chdir('libev')
-    try:
-        _system(libev_configure_command)
-    finally:
-        os.chdir('..')
+    # XXX ugly - need to find a better way
+    system('cp -r libev gevent/libev')
+    system('touch gevent/libev/__init__.py')
+    system('cd gevent/libev && ./configure > configure_output.txt')
     from gevent import corecffi
     ext_modules = [corecffi.ffi.verifier.get_extension()]
     install_requires = []
+    include_package_data = True
     run_make = False
 else:
     ext_modules = [CORE,
@@ -299,6 +303,7 @@ else:
                    Extension(name="gevent._util",
                              sources=["gevent/gevent._util.c"])]
     install_requires = ['greenlet']
+    include_package_data = False
     run_make = True
 
 
@@ -314,6 +319,7 @@ def run_setup(ext_modules, run_make):
         author_email='denis.bilenko@gmail.com',
         url='http://www.gevent.org/',
         packages=['gevent'],
+        include_package_data=include_package_data,
         ext_modules=ext_modules,
         cmdclass=dict(build_ext=my_build_ext, sdist=sdist),
         install_requires=install_requires,
