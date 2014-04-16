@@ -167,7 +167,15 @@ class RunResult(object):
 lock = threading.Lock()
 
 
-def run(command, **kwargs):
+def run(*args, **kwargs):
+    try:
+        return _run(*args, **kwargs)
+    except:
+        traceback.print_exc()
+        raise
+
+
+def _run(command, **kwargs):
     buffer_output = kwargs.pop('buffer_output', BUFFER_OUTPUT)
     if buffer_output:
         assert 'stdout' not in kwargs and 'stderr' not in kwargs, kwargs
