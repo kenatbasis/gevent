@@ -20,6 +20,11 @@
 from greentest import TestCase, main, tcp_listener
 import gevent
 from gevent import socket
+import sys
+import gc
+
+
+PYPY = hasattr(sys, 'pypy_version_info')
 
 
 class TestGreenIo(TestCase):
@@ -76,6 +81,8 @@ class TestGreenIo(TestCase):
         server_greenlet.kill()
 
     def test_del_closes_socket(self):
+        if PYPY:
+            return
         timer = gevent.Timeout.start_new(0.5)
 
         def accept_once(listener):
