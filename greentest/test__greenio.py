@@ -21,7 +21,6 @@ from greentest import TestCase, main, tcp_listener
 import gevent
 from gevent import socket
 import sys
-import gc
 
 
 PYPY = hasattr(sys, 'pypy_version_info')
