@@ -15,7 +15,6 @@ import _continuation
 _continulet = _continuation.continulet
 
 
-
 class SpawnedLink(object):
     """A wrapper around link that calls it in another greenlet.
 
