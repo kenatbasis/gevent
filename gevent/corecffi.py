@@ -714,9 +714,6 @@ class loop(object):
 # #endif
 
 
-_refcount = {}
-
-
 class watcher(object):
 
     def __init__(self, _loop, ref=True, priority=None, args=tuple()):
@@ -725,7 +722,6 @@ class watcher(object):
             self._flags = 0
         else:
             self._flags = 4
-        _refcount[self] = True
         self.args = None
         self._callback = None
         self._watcher = ffi.new(self._watcher_ffi_type)
@@ -733,6 +729,9 @@ class watcher(object):
         if priority is not None:
             libev.ev_set_priority(self._watcher, priority)
         self._watcher_init(self._watcher, self._cb, *args)
+
+    def __del__(self):
+        self._watcher_stop(self.loop._ptr, self._watcher)
 
     def __repr__(self):
         format = self._format()
@@ -816,7 +815,6 @@ class watcher(object):
         self._watcher_stop(self.loop._ptr, self._watcher)
         self._callback = None
         self.args = None
-        _refcount.pop(self, None)
 
     def _get_priority(self):
         return libev.ev_priority(self._watcher)
@@ -907,7 +905,6 @@ class timer(watcher):
         watcher.__init__(self, loop, ref=ref, priority=priority, args=(after, repeat))
 
     def start(self, callback, *args, **kw):
-        _refcount[self] = True
         update = kw.get("update", True)
         self.callback = callback
         self.args = args
@@ -923,7 +920,6 @@ class timer(watcher):
         return self._watcher.at
 
     def again(self, callback, *args, **kw):
-        _refcount[self] = True
         update = kw.get("update", True)
         self.callback = callback
         self.args = args
