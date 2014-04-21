@@ -13,6 +13,9 @@ class SimpleStreamServer(StreamServer):
         fd = client_socket.makefile()
         request_line = fd.readline()
         if not request_line:
+            # for PYPY:
+            client_socket.close()
+            fd.close()
             return
         try:
             method, path, rest = request_line.split(' ', 3)
@@ -29,6 +32,9 @@ class SimpleStreamServer(StreamServer):
                     break
         else:
             client_socket.sendall('HTTP/1.0 404 WTF?\r\n\r\n')
+        # for PYPY:
+        client_socket.close()
+        fd.close()
 
 
 class Settings:
