@@ -718,16 +718,8 @@ _refcount = {}
 
 
 class watcher(object):
-    libev_start_this_watcher = None
-    libev_stop_this_watcher = None
-    _callback = None
-    loop = None
-    args = None
-    _flags = 0
 
     def __init__(self, _loop, ref=True, priority=None):
-        assert isinstance(_loop, loop)
-        assert self.libev_stop_this_watcher is not None
         self.loop = _loop
         if ref:
             self._flags = 0
@@ -736,6 +728,8 @@ class watcher(object):
         if priority is not None:
             libev.ev_set_priority(self._watcher, priority)
         _refcount[self] = True
+        self.args = None
+        self._callback = None
 
     def __repr__(self):
         format = self._format()
@@ -810,13 +804,13 @@ class watcher(object):
         self.callback = callback
         self.args = args
         self._libev_unref()
-        self.libev_start_this_watcher(self.loop._ptr, self._watcher)
+        self._watcher_start(self.loop._ptr, self._watcher)
 
     def stop(self):
         if self._flags & 2:
             self.loop.ref()
             self._flags &= ~2
-        self.libev_stop_this_watcher(self.loop._ptr, self._watcher)
+        self._watcher_stop(self.loop._ptr, self._watcher)
         self._callback = None
         self.args = None
         _refcount.pop(self, None)
@@ -852,8 +846,8 @@ class watcher(object):
 
 
 class io(watcher):
-    libev_start_this_watcher = libev.ev_io_start
-    libev_stop_this_watcher = libev.ev_io_stop
+    _watcher_start = libev.ev_io_start
+    _watcher_stop = libev.ev_io_stop
 
     def __init__(self, loop, fd, events, ref=True, priority=None):
         if fd < 0:
@@ -898,8 +892,8 @@ class io(watcher):
 
 
 class timer(watcher):
-    libev_start_this_watcher = libev.ev_timer_start
-    libev_stop_this_watcher = libev.ev_timer_stop
+    _watcher_start = libev.ev_timer_start
+    _watcher_stop = libev.ev_timer_stop
 
     def __init__(self, loop, after=0.0, repeat=0.0, ref=True, priority=None):
         if repeat < 0.0:
@@ -937,8 +931,8 @@ class timer(watcher):
 
 
 class signal(watcher):
-    libev_start_this_watcher = libev.ev_signal_start
-    libev_stop_this_watcher = libev.ev_signal_stop
+    _watcher_start = libev.ev_signal_start
+    _watcher_stop = libev.ev_signal_stop
 
     def __init__(self, loop, signalnum, ref=True, priority=None):
         if signalnum < 1 or signalnum >= signalmodule.NSIG:
@@ -957,8 +951,8 @@ class signal(watcher):
 
 
 class idle(watcher):
-    libev_start_this_watcher = libev.ev_idle_start
-    libev_stop_this_watcher = libev.ev_idle_stop
+    _watcher_start = libev.ev_idle_start
+    _watcher_stop = libev.ev_idle_stop
 
     def __init__(self, loop, ref=True, priority=None):
         self._watcher = ffi.new("struct ev_idle *")
@@ -968,8 +962,8 @@ class idle(watcher):
 
 
 class prepare(watcher):
-    libev_start_this_watcher = libev.ev_prepare_start
-    libev_stop_this_watcher = libev.ev_prepare_stop
+    _watcher_start = libev.ev_prepare_start
+    _watcher_stop = libev.ev_prepare_stop
 
     def __init__(self, loop, ref=True, priority=None):
         self._watcher = ffi.new("struct ev_prepare *")
@@ -980,8 +974,8 @@ class prepare(watcher):
 
 
 class check(watcher):
-    libev_start_this_watcher = libev.ev_check_start
-    libev_stop_this_watcher = libev.ev_check_stop
+    _watcher_start = libev.ev_check_start
+    _watcher_stop = libev.ev_check_stop
 
     def __init__(self, loop, ref=True, priority=None):
         self._watcher = ffi.new("struct ev_check *")
@@ -992,8 +986,8 @@ class check(watcher):
 
 
 class fork(watcher):
-    libev_start_this_watcher = libev.ev_fork_start
-    libev_stop_this_watcher = libev.ev_fork_stop
+    _watcher_start = libev.ev_fork_start
+    _watcher_stop = libev.ev_fork_stop
 
     def __init__(self, loop, ref=True, priority=None):
         self._watcher = ffi.new("struct ev_fork *")
@@ -1003,8 +997,8 @@ class fork(watcher):
 
 
 class async(watcher):
-    libev_start_this_watcher = libev.ev_async_start
-    libev_stop_this_watcher = libev.ev_async_stop
+    _watcher_start = libev.ev_async_start
+    _watcher_stop = libev.ev_async_stop
 
     def __init__(self, loop, ref=True, priority=None):
         self._watcher = ffi.new("struct ev_async *")
@@ -1021,8 +1015,8 @@ class async(watcher):
 
 
 class child(watcher):
-    libev_start_this_watcher = libev.ev_child_start
-    libev_stop_this_watcher = libev.ev_child_stop
+    _watcher_start = libev.ev_child_start
+    _watcher_stop = libev.ev_child_stop
 
     def __init__(self, loop, pid, trace=0, ref=True):
         if not loop.default:
