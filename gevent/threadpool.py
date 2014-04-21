@@ -154,18 +154,17 @@ class ThreadPool(object):
                 break
         try:
             task_queue = self.task_queue
-            result = AsyncResult()
-            thread_result = ThreadResult(result, pool=self)
+            thread_result = ThreadResult(pool=self)
             task_queue.put((func, args, kwargs, thread_result))
             self.adjust()
             # rawlink() must be the last call
-            result.rawlink(lambda *args: self._semaphore.release())
+            thread_result.rawlink(lambda *args: self._semaphore.release())
             # XXX this _semaphore.release() is competing for order with get()
             # XXX this is not good, just make ThreadResult release the semaphore before doing anything else
         except:
             semaphore.release()
             raise
-        return result
+        return thread_result
 
     def _decrease_size(self):
         if sys is None:
@@ -278,37 +277,28 @@ class ThreadPool(object):
         return IMapUnordered.spawn(func, iterable, spawn=self.spawn)
 
 
-class ThreadResult(object):
+class ThreadResult(AsyncResult):
 
-    def __init__(self, receiver, pool):
-        self.receiver = receiver
-        self.value = None
-        self.context = None
-        self.exc_info = None
+    def __init__(self, pool):
+        AsyncResult.__init__(self)
         self.pool = pool
         hub = pool.hub
         self.async = hub.loop.async()
         self.async.start(self._on_async)
-        pool._active[self.async] = True
+        self.exc_info = None
 
     def _on_async(self):
         self.pool._active.pop(self.async, None)
         self.async.stop()
-        try:
-            if self.exc_info is not None:
-                try:
-                    self.pool.hub.handle_error(self.context, *self.exc_info)
-                finally:
-                    self.exc_info = None
-            self.context = None
-            self.async = None
-            self.pool = None
-            if self.receiver is not None:
-                # XXX exception!!!?
-                self.receiver(self)
-        finally:
-            self.receiver = None
-            self.value = None
+        self.async = None
+        if self.exc_info is not None:
+            try:
+                self.pool.hub.handle_error(self.context, *self.exc_info)
+            finally:
+                self.exc_info = None
+        self.context = None
+        self.pool = None
+        AsyncResult.set(self, self.value)
 
     def set(self, value):
         self.value = value
@@ -319,9 +309,10 @@ class ThreadResult(object):
         self.exc_info = exc_info
         self.async.send()
 
-    # link protocol:
-    def successful(self):
-        return True
+    def rawlink(self, callback):
+        if self.async is not None:
+            self.pool._active[self.async] = True
+        return AsyncResult.rawlink(self, callback)
 
 
 def wrap_errors(errors, function, args, kwargs):
