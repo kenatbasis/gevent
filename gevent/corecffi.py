@@ -23,13 +23,11 @@ def st_nlink_type():
 from cffi import FFI
 ffi = FFI()
 ffi.cdef("""
-
 #define EV_MINPRI ...
 #define EV_MAXPRI ...
 
 #define EV_VERSION_MAJOR ...
 #define EV_VERSION_MINOR ...
-
 
 #define EV_UNDEF ...
 #define EV_NONE ...
@@ -81,38 +79,27 @@ struct ev_loop {
     int activecnt;
     ...;
 };
-
 struct ev_io {
     int fd;
     int events;
     ...;
 };
-
 struct ev_timer {
     double at;
     ...;
 };
-
 struct ev_signal {...;};
-
 struct ev_idle  {...;};
-
 struct ev_prepare {...;};
-
 struct ev_check {...;};
-
 struct ev_fork  {...;};
-
-
 struct ev_async  {...;};
-
 struct ev_child {
     int pid;
     int rpid;
     int rstatus;
     ...;
 };
-
 struct stat {
     """ + st_nlink_type() + """ st_nlink;
     ...;
@@ -125,11 +112,7 @@ struct ev_stat {
     ...;
 };
 
-
-
 typedef double ev_tstamp;
-
-
 
 int ev_version_major();
 int ev_version_minor();
@@ -201,10 +184,8 @@ unsigned int ev_backend(struct ev_loop*);
 void ev_verify(struct ev_loop*);
 void ev_run(struct ev_loop*, int flags);
 
-
 ev_tstamp ev_now (struct ev_loop *);
 void ev_now_update (struct ev_loop *); /* update event loop time */
-
 void ev_ref(struct ev_loop*);
 void ev_unref(struct ev_loop*);
 void ev_break(struct ev_loop*, int);
