@@ -28,6 +28,7 @@ class ThreadPool(object):
         self.pid = os.getpid()
         self.fork_watcher = hub.loop.fork(ref=False)
         self._init(maxsize)
+        self._active = {}
 
     def _set_maxsize(self, maxsize):
         if not isinstance(maxsize, integer_types):
@@ -154,7 +155,7 @@ class ThreadPool(object):
         try:
             task_queue = self.task_queue
             result = AsyncResult()
-            thread_result = ThreadResult(result, hub=self.hub)
+            thread_result = ThreadResult(result, pool=self)
             task_queue.put((func, args, kwargs, thread_result))
             self.adjust()
             # rawlink() must be the last call
@@ -279,28 +280,29 @@ class ThreadPool(object):
 
 class ThreadResult(object):
 
-    def __init__(self, receiver, hub=None):
-        if hub is None:
-            hub = get_hub()
+    def __init__(self, receiver, pool):
         self.receiver = receiver
-        self.hub = hub
         self.value = None
         self.context = None
         self.exc_info = None
+        self.pool = pool
+        hub = pool.hub
         self.async = hub.loop.async()
         self.async.start(self._on_async)
+        pool._active[self.async] = True
 
     def _on_async(self):
+        self.pool._active.pop(self.async, None)
         self.async.stop()
         try:
             if self.exc_info is not None:
                 try:
-                    self.hub.handle_error(self.context, *self.exc_info)
+                    self.pool.hub.handle_error(self.context, *self.exc_info)
                 finally:
                     self.exc_info = None
             self.context = None
             self.async = None
-            self.hub = None
+            self.pool = None
             if self.receiver is not None:
                 # XXX exception!!!?
                 self.receiver(self)
