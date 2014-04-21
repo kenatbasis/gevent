@@ -11,8 +11,9 @@ __all__ = ['Greenlet',
            'killall']
 
 
-import _continuation
-_continulet = _continuation.continulet
+if PYPY:
+    import _continuation
+    _continulet = _continuation.continulet
 
 
 class SpawnedLink(object):
@@ -101,7 +102,9 @@ class Greenlet(greenlet):
             return self._start_event is not None and self._exception is _NONE
 
     if PYPY:
+
         # oops - pypy's .dead relies on __nonzero__ which we overriden above
+
         @property
         def dead(self):
             return self._greenlet__started and not (self._greenlet__main or _continulet.is_pending(self))
