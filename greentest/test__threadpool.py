@@ -146,10 +146,12 @@ class TestPool(TestCase):
 
     def test_imap_unordered_gc(self):
         it = self.pool.imap_unordered(sqr, range(10))
+        result = []
         for i in range(10):
-            self.assertEqual(six.advance_iterator(it), i * i)
+            result.append(six.advance_iterator(it))
             gc.collect()
         self.assertRaises(StopIteration, lambda: six.advance_iterator(it))
+        self.assertEqual(sorted(result), [x*x for x in range(10)])
 
     def test_imap_random(self):
         it = self.pool.imap(sqr_random_sleep, range(10))
