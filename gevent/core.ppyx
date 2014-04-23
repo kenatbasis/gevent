@@ -46,6 +46,8 @@ cdef extern from *:
 cdef extern from "stathelper.c":
     object _pystat_fromstructstat(void*)
 
+cdef extern from "stop_signal_watchers.c":
+    void gevent_stop_signal_watchers(libev.ev_loop*)
 
 UNDEF = libev.EV_UNDEF
 NONE = libev.EV_NONE
@@ -318,6 +320,7 @@ cdef public class loop [object PyGeventLoopObject, type PyGeventLoop_Type]:
         global _default_loop_destroyed
         if self._ptr:
             self._stop_watchers()
+            gevent_stop_signal_watchers(self._ptr)
             if __SYSERR_CALLBACK == self._handle_syserr:
                 set_syserr_cb(None)
             if libev.ev_is_default_loop(self._ptr):
