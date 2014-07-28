@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2012 Denis Bilenko. See LICENSE for details.
+(int)# Copyright (c) 2009-2012 Denis Bilenko. See LICENSE for details.
 cimport cython
 cimport libev
 from python cimport *
@@ -263,18 +263,24 @@ cdef public class loop [object PyGeventLoopObject, type PyGeventLoop_Type]:
         libev.ev_timer_init(&self._periodic_signal_checker, <void*>gevent_periodic_signal_check, 0.3, 0.3)
 #endif
         libev.ev_timer_init(&self._timer0, <void*>gevent_noop, 0.0, 0.0)
+        print "initializing new loop"
         if ptr:
+            print "ptr existed"
             self._ptr = <libev.ev_loop*>ptr
         else:
+            print "no ptr existed"
             c_flags = _flags_to_int(flags)
             _check_flags(c_flags)
             c_flags |= libev.EVFLAG_NOENV
             if default is None:
                 default = True
                 if _default_loop_destroyed:
+                    print "default loop was destroyed"
                     default = False
             if default:
+                print "default loop existed"
                 self._ptr = libev.gevent_ev_default_loop(c_flags)
+                print "%s" % <int>self._ptr
                 if not self._ptr:
                     raise SystemError("ev_default_loop(%s) failed" % (c_flags, ))
 #ifdef _WIN32
@@ -282,6 +288,7 @@ cdef public class loop [object PyGeventLoopObject, type PyGeventLoop_Type]:
                 libev.ev_unref(self._ptr)
 #endif
             else:
+                print "default loop did not exist"
                 self._ptr = libev.ev_loop_new(c_flags)
                 if not self._ptr:
                     raise SystemError("ev_loop_new(%s) failed" % (c_flags, ))
@@ -324,8 +331,10 @@ cdef public class loop [object PyGeventLoopObject, type PyGeventLoop_Type]:
             if __SYSERR_CALLBACK == self._handle_syserr:
                 set_syserr_cb(None)
             if libev.ev_is_default_loop(self._ptr):
+                print "destroyed default loop bool"
                 _default_loop_destroyed = True
             libev.ev_loop_destroy(self._ptr)
+            print "destroyed default loop"
             self._ptr = NULL
 
     def __dealloc__(self):

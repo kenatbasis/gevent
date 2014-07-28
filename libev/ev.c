@@ -3579,8 +3579,10 @@ ev_io_stop (EV_P_ ev_io *w) EV_THROW
 void noinline
 ev_timer_start (EV_P_ ev_timer *w) EV_THROW
 {
+  printf("starting a timer\n");
   if (expect_false (ev_is_active (w)))
     return;
+  printf("loop was active\n");
 
   ev_at (w) += mn_now;
 
